@@ -1,0 +1,24 @@
+Package: orientDAG
+Type: Package
+Title: Orient DAG edges
+Version: 1.0
+Date: 2019-10-07
+Author: Iyar Lin <iyarlin@gmail.com>
+Maintainer: Iyar Lin <iyarlin@gmail.com>
+Description: The orientDAG package is used to orient DAG edges. It also 
+  includes utility functions to convert DAGs between different representations
+  as well as measure DAG dissimilarity measures.
+License: file LICENSE
+Imports: 
+  dagitty (>= 0.2.2), 
+  energy (>= 1.7.6), 
+  generalCorr (>= 1.1.2), 
+  infotheo (>= 1.2.0)
+Suggests: 
+  carData (>= 3.2.0),  
+  igraph (>= 1.2.4.1), 
+  bnlearn (>= 4.4.1)
+Depends: R (>= 3.5.1)
+RoxygenNote: 6.1.1
+Roxygen: list(markdown = TRUE)
+Encoding: UTF-8
