@@ -1,13 +1,11 @@
 # simMixedDAG
 
-<img src='inst/simMixedDAGhex.png' align="right" height="200" width = "190" />
+<img src='inst/orientDAGhex.png' align="right" height="200" width = "190" />
 
 
-The simMixedDAG package contains functions for simulation of both
-parametric and non-parametric datasets from DAG models. It also enables calculating
-average treatment effects in DAG models.
+The orientDAG package is used to orient DAG edges. It also includes utility functions to convert DAGs between different representations as well as measure DAG dissimilarity measures.
 
-For a "vignette" of sorts see my [blog post](https://iyarlin.github.io/2019/07/23/mixed_dag_simulation_using_simmixeddag_package/).
+For a "vignette" of sorts see my [blog post](https://iyarlin.github.io/2019/07/23/automatic_DAG_learning_part_2/).
 
 I'm a rather poor progarammer and there's probably plenty of bugs abound.  
 If you happen to run into trouble please open an issue or consider improving the code.
