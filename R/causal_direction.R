@@ -7,11 +7,12 @@
 #'
 #' @param vec_1 Measurements of the first variable
 #' @param vec_2 Measurements of the second variable
-#' @param max_continuous_pairs_sample Estimating the causal direction between two
 #' numeric variables can be costly in time. For this reason one can cap the number
 #' of measurements used for it using this argument.
+#' @param continuous_thresh minimum absolute sum magnitude required to re-orient a continuous-continuous pair edge 
+#' @param discrete_thresh minimum absolute distance correlation magnitude required to re-orient a discrete-continuous/discrete pair edge 
 #' @return A string denoting whether \code{vec_1} causes \code{vec_2} or vice versa
-#' @example examples/orient_dag.R
+#' @example examples/example_orient_dag.R
 #' @details Depending on the 2 variables encoding (each is either numeric or discrete)
 #' a specific method is dispatched to determine the causal direction between them.
 #' When the 2 variables are continuous, we can use several the general correlation measure
@@ -25,7 +26,7 @@
 #' variable by calling \code{\link[infotheo]{discretize}} and use the method for two discrete variables.
 #' @export
 
-causal_direction <- function(vec_1, vec_2, max_continuous_pairs_sample = 5000) {
+causal_direction <- function(vec_1, vec_2, continuous_thresh, discrete_thresh) {
   if (class(vec_1) == "character") vec_1 <- factor(vec_1)
   if (class(vec_2) == "character") vec_2 <- factor(vec_2)
   y_cond_x <- function(x, y) {
@@ -35,8 +36,12 @@ causal_direction <- function(vec_1, vec_2, max_continuous_pairs_sample = 5000) {
     ans[is.nan(ans)] <- 0
     ans
   }
-  if (class(vec_1) == "factor" & class(vec_2) == "numeric") vec_2 <- factor(infotheo:::discretize(vec_2)$X)
-  if (class(vec_1) == "numeric" & class(vec_2) == "factor") vec_1 <- factor(infotheo:::discretize(vec_1)$X)
+  if (class(vec_1) == "factor" & class(vec_2) == "numeric"){ 
+    vec_2 <- factor(infotheo::discretize(vec_2)$X)
+  }
+  if (class(vec_1) == "numeric" & class(vec_2) == "factor"){ 
+    vec_1 <- factor(infotheo::discretize(vec_1)$X)
+  }
   if (class(vec_1) == "factor" & class(vec_2) == "factor") {
     p_vec_2_given_vec1 <- y_cond_x(x = vec_1, y = vec_2)
     p_vec_1 <- table(vec_1) / length(vec_1)
@@ -46,18 +51,21 @@ causal_direction <- function(vec_1, vec_2, max_continuous_pairs_sample = 5000) {
     p_vec_2 <- table(vec_2) / length(vec_2)
     dist_vec_2_causes_vec_1 <- energy:::dcor(p_vec_2, t(p_vec_1_given_vec2))
 
-    if (dist_vec_1_causes_vec_2 > dist_vec_2_causes_vec_1) {
+    if (dist_vec_2_causes_vec_1 - dist_vec_1_causes_vec_2 > discrete_thresh) {
+      return("vec 1 causes vec 2")
+    } else if(dist_vec_1_causes_vec_2 - dist_vec_2_causes_vec_1 > discrete_thresh){
       return("vec 2 causes vec 1")
     } else {
-      return("vec 1 causes vec 2")
+      return("not sure")
     }
   } else {
-    samples <- sample.int(length(vec_1), min(max_continuous_pairs_sample, length(vec_1)))
-    cause <- generalCorr:::some0Pairs(data.frame(vec_1, vec_2)[samples, ], verbo = F)$outVote[3]
-    if (cause == "vec_2") {
+    cause_sum <- as.numeric(generalCorr:::some0Pairs(data.frame(vec_1, vec_2), verbo = F)$outVote[7])
+    if (cause_sum > continuous_thresh) {
       return("vec 1 causes vec 2")
-    } else {
+    } else if (cause_sum < -continuous_thresh){
       return("vec 2 causes vec 1")
+    } else {
+      return("not sure")
     }
   }
 }

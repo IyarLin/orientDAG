@@ -1,4 +1,4 @@
-# simMixedDAG
+# orientDAG
 
 <img src='inst/orientDAGhex.png' align="right" height="200" width = "190" />
 

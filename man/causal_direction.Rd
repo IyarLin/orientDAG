@@ -4,16 +4,18 @@
 \alias{causal_direction}
 \title{Determine the causal direction between 2 variables}
 \usage{
-causal_direction(vec_1, vec_2, max_continuous_pairs_sample = 5000)
+causal_direction(vec_1, vec_2, continuous_thresh, discrete_thresh)
 }
 \arguments{
 \item{vec_1}{Measurements of the first variable}
 
-\item{vec_2}{Measurements of the second variable}
-
-\item{max_continuous_pairs_sample}{Estimating the causal direction between two
+\item{vec_2}{Measurements of the second variable
 numeric variables can be costly in time. For this reason one can cap the number
 of measurements used for it using this argument.}
+
+\item{continuous_thresh}{minimum absolute sum magnitude required to re-orient a continuous-continuous pair edge}
+
+\item{discrete_thresh}{minimum absolute distance correlation magnitude required to re-orient a discrete-continuous/discrete pair edge}
 }
 \value{
 A string denoting whether \code{vec_1} causes \code{vec_2} or vice versa
@@ -36,4 +38,57 @@ When the 2 variables are discrete, we can use the distance correlation measure b
 
 When one of the variables is discrete, and the other is continuous we can discretisize the continuous
 variable by calling \code{\link[infotheo]{discretize}} and use the method for two discrete variables.
+}
+\examples{
+library(orientDAG)
+library(dagitty)
+library(simMixedDAG)
+library(carData)
+library(bnlearn)
+
+# load dataset and define underlying DAG
+data("GSSvocab")
+GSSvocab <- GSSvocab \%>\%
+  filter(complete.cases(.)) \%>\%
+  mutate(year = as.numeric(as.character(year)))
+
+true_dag_dagitty <- dagitty("dag{
+                            age -> educGroup;
+                            age -> nativeBorn;
+                            nativeBorn -> ageGroup;
+                            nativeBorn -> vocab;
+                            educ -> age;
+                            educ -> gender;
+                            educ -> year;
+                            vocab -> gender;
+                            vocab -> year
+                            }")
+
+# DAG adjacency matrix representation for distance calculations
+true_dag <- dagitty_to_adjmatrix(true_dag_dagitty)
+
+# Fit a non-parametric DAG model 
+non_param_dag_model <- non_parametric_dag_model(true_dag_dagitty, GSSvocab)
+
+# Generate a dataset from the above model
+sim_data <- sim_mixed_dag(non_param_dag_model, N = 20000)
+
+# First pass - estimate DAG using bnlearn::tabu function
+est_dag <- tabu(sim_data)
+est_dag <- bn_to_adjmatrix(est_dag)
+est_dag <- est_dag[
+  match(rownames(true_dag), rownames(est_dag)),
+  match(colnames(true_dag), colnames(est_dag))
+  ]
+tabu_dist <- dag_dist(true_dag, est_dag, distance_measure = "sid")
+tabu_dist
+
+# Improve on our first pass by re-orienting edges using the orient_dag function
+
+est_dag_orient_dag <- orient_dag(
+  adjmatrix = est_dag,
+  x = sim_data, 
+  max_continuous_pairs_sample = 5000) # continuous pairs re-orientation takes time so sample size is kept small)
+orient_dag_dist <- orientDAG::dag_dist(true_dag, est_dag_orient_dag, distance_measure = "sid")
+orient_dag_dist
 }

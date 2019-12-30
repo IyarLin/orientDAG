@@ -25,9 +25,9 @@ library(dagitty)
 library(bnlearn)
 library(igraph)
 g <- dagitty("dag {
-  bn [pos=\\"0,0\\"]
-  dagitty [pos=\\"0.5,-1\\"]
-  adjmatrix [pos=\\"1,0\\"]
+  bn [pos=\"0,0\"]
+  dagitty [pos=\"0.5,-1\"]
+  adjmatrix [pos=\"1,0\"]
   adjmatrix -> dagitty
   dagitty -> adjmatrix
   bn -> adjmatrix
